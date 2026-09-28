@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#070b1a">
+<title>球球大乱斗 · 双人对战</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="game" width="960" height="640"></canvas>
+
+    <!-- 顶部 HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-side p1">
+        <div class="pname">玩家 1</div>
+        <div class="pips" id="pips1"><i></i><i></i><i></i></div>
+        <div class="wincount" id="wincount1"></div>
+        <div class="pstatus" id="status1"></div>
+      </div>
+      <div id="timer">2:30</div>
+      <div class="hud-side p2">
+        <div class="pname">玩家 2</div>
+        <div class="pips" id="pips2"><i></i><i></i><i></i></div>
+        <div class="wincount" id="wincount2"></div>
+        <div class="pstatus" id="status2"></div>
+      </div>
+    </div>
+
+    <!-- 开始界面 -->
+    <div id="menu" class="overlay">
+      <h1>球球大乱斗</h1>
+      <p class="sub">把对方撞下平台即可得分!</p>
+      <div class="win-rule menu-rules">
+        <div class="wr"><span class="wr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span><span>先得 <b id="subScoreNum">3</b> 分即胜</span></div>
+        <div class="wr"><span class="wr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>时间到 · 分高者胜</span></div>
+        <div class="wr-note">平分加赛 · 下一分定胜负</div>
+      </div>
+      <div class="score-set">
+        <span class="set-label">获胜分数</span>
+        <button id="btnScoreMinus" class="step-btn" aria-label="减少获胜分数">−</button>
+        <b id="winScoreVal">3</b>
+        <button id="btnScorePlus" class="step-btn" aria-label="增加获胜分数">+</button>
+      </div>
+      <div class="menu-chips">
+        <div class="chip mc1"><span class="who">P1</span>A/D 移动 · W 跳 · S 下砸 · 空格 冲刺</div>
+        <div class="chip mc2"><span class="who">P2</span>←/→ 移动 · ↑ 跳 · ↓ 下砸 · 回车 冲刺</div>
+      </div>
+      <button id="btnStart" class="big-btn">开始对战</button>
+      <p class="tip">空格 / 回车 开始 · P 暂停 · R 重开</p>
+    </div>
+
+    <!-- 虚拟按键:桌面=按下点亮显示,触屏=直接操控(左 P1 / 右 P2) -->
+    <div id="pads" class="hidden" aria-hidden="true">
+      <div class="pad pk1">
+        <div class="padgrid">
+          <span class="vk" id="vk-w">W</span>
+          <span class="vk" id="vk-a">A</span><span class="vk" id="vk-s">S</span><span class="vk" id="vk-d">D</span>
+          <span class="vk vk-dash" id="vk-sp">冲刺 · 空格</span>
+        </div>
+      </div>
+      <div class="pad pk2">
+        <div class="padgrid">
+          <span class="vk" id="vk-up">↑</span>
+          <span class="vk" id="vk-left">←</span><span class="vk" id="vk-down">↓</span><span class="vk" id="vk-right">→</span>
+          <span class="vk vk-dash" id="vk-en">冲刺 · 回车</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结算界面 -->
+    <div id="over" class="overlay hidden">
+      <p class="congrats">恭喜!</p>
+      <h1 id="winText">玩家 1 获胜!</h1>
+      <p class="sub" id="finalScore">3 : 1</p>
+      <div class="over-btns">
+        <button id="btnRestart" class="big-btn">再来一局</button>
+        <button id="btnMenu" class="big-btn ghost-btn">返回菜单</button>
+      </div>
+      <p class="tip">回车 再来一局 · 返回菜单可调整分数设定</p>
+    </div>
+
+    <!-- 竖屏提示(仅触屏竖屏显示,可关闭) -->
+    <div id="rotateHint">
+      <span class="rh-phone" aria-hidden="true"></span>
+      <p>横屏体验更佳<small>双人各据一角,虚拟按键更好按</small></p>
+      <button id="rhClose" type="button">知道了</button>
+    </div>
+  </div>
+
+  <!-- 右侧信息栏:比分 + 玩法 -->
+  <aside id="sidebar">
+    <h2 class="side-title">球球大乱斗</h2>
+
+    <div class="panel">
+      <h3>比分</h3>
+      <div class="score-row">
+        <div class="sc sc1"><span class="sc-name">玩家1</span><b id="score1">0</b></div>
+        <div class="sc-colon">:</div>
+        <div class="sc sc2"><b id="score2">0</b><span class="sc-name">玩家2</span></div>
+      </div>
+      <div class="win-rule">
+        <div class="wr"><span class="wr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span><span>先得 <b id="ruleScoreNum">3</b> 分即胜</span></div>
+        <div class="wr"><span class="wr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>时间到 · 分高者胜</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>玩法操作</h3>
+      <div class="ctrl-row c1"><span class="who">玩家1</span><span><b>A/D</b> 移动 <b>W</b> 跳 <b>S</b> 下砸 <b>空格</b> 冲刺</span></div>
+      <div class="ctrl-row c2"><span class="who">玩家2</span><span><b>←/→</b> 移动 <b>↑</b> 跳 <b>↓</b> 下砸 <b>回车</b> 冲刺</span></div>
+      <div class="goal">撞击对手,把它撞下平台即可得分</div>
+    </div>
+
+    <div class="panel">
+      <h3>道具</h3>
+      <div class="prop-line prop-speed">
+        <span class="prop-ip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 5 13h5l-2 9 8-11h-5l2-9z"/></svg></span>
+        <span>加速 5 秒</span>
+      </div>
+      <div class="prop-line prop-grow">
+        <span class="prop-ip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 9V5h4M19 9V5h-4M5 15v4h4M19 15v4h-4"/></svg></span>
+        <span>变大加重 6 秒</span>
+      </div>
+      <div class="prop-line prop-freeze">
+        <span class="prop-ip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/></svg></span>
+        <span>冰冻对手 2.5 秒</span>
+      </div>
+      <div class="prop-line prop-dash">
+        <span class="prop-ip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg></span>
+        <span>刷新冲刺并短暂爆发</span>
+      </div>
+    </div>
+
+    <div class="panel tips">
+      <div class="tips-row">
+        <span class="tchip">常规 <b>2:30</b></span>
+        <span class="tchip">平分加赛 <b>≤15 秒</b></span>
+      </div>
+      <div class="tips-dur" id="durationLine">整局保证在 3 分钟以内</div>
+      <div class="tips-keys"><b>P</b> 暂停 · <b>R</b> 重开</div>
+    </div>
+  </aside>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>

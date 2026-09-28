@@ -1,0 +1,9 @@
+{
+  "name": "gs-bob",
+  "version": "1.0.0",
+  "private": true,
+  "description": "球球大乱斗 · 双人同屏对战(零依赖纯静态页)",
+  "scripts": {
+    "test": "node test/smoke.js"
+  }
+}
